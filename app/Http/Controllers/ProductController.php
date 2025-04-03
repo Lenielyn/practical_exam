@@ -2,61 +2,73 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Product;
 use Illuminate\Http\Request;
-use App\Models\Post;
+use Illuminate\Http\Response;
 
-class PostController extends Controller
+class ProductController extends Controller
 {
-    // Display all posts
+    /**
+     * Retrieve all products.
+     */
     public function index()
     {
-        $posts = Post::all();
-        return response()->json($posts);
+        return response()->json(Product::all(), Response::HTTP_OK);
     }
 
-    // Store a new post
+    /**
+     * Validate and store a new product.
+     */
     public function store(Request $request)
     {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'content' => 'required|string'
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'price' => 'nullable|numeric|min:0',
+            'quantity' => 'required|integer|min:0',
         ]);
 
-        $post = Post::create([
-            'title' => $request->title,
-            'content' => $request->content
-        ]);
+        $product = Product::create($validated);
 
-        return response()->json($post, 201);
+        return response()->json($product, Response::HTTP_CREATED);
     }
 
-    // Show a specific post
+    /**
+     * Retrieve a single product by ID.
+     */
     public function show($id)
     {
-        $post = Post::findOrFail($id);
-        return response()->json($post);
+        $product = Product::findOrFail($id);
+        return response()->json($product, Response::HTTP_OK);
     }
 
-    // Update a post
+    /**
+     * Validate and update a product.
+     */
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'title' => 'sometimes|string|max:255',
-            'content' => 'sometimes|string'
+        $product = Product::findOrFail($id);
+        
+        $validated = $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'description' => 'nullable|string',
+            'price' => 'nullable|numeric|min:0',
+            'quantity' => 'sometimes|required|integer|min:0',
         ]);
 
-        $post = Post::findOrFail($id);
-        $post->update($request->only(['title', 'content']));
+        $product->update($validated);
 
-        return response()->json($post);
+        return response()->json($product, Response::HTTP_OK);
     }
 
-    // Delete a post
+    /**
+     * Delete a product.
+     */
     public function destroy($id)
     {
-        $post = Post::findOrFail($id);
-        $post->delete();
+        $product = Product::findOrFail($id);
+        $product->delete();
 
-        return response()->json(['message' => 'Post deleted successfully']);
+        return response()->json(['message' => 'Product deleted successfully'], Response::HTTP_NO_CONTENT);
     }
 }
